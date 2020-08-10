@@ -7,5 +7,6 @@ setup(name='fairscape-py-auth',
       description='Python auth functions for FAIRSCAPE',
       author='Max Levinson',
       author_email='',
-      packages=['flask'],
+      packages=['auth'],
+      install_requires=['flask'],
      )
