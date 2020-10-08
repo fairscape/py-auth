@@ -5,10 +5,82 @@ import os
 from functools import wraps
 
 AUTH_SERVICE = os.environ.get("AUTH_SERVICE", "http://clarklab.uvarc.io/auth")
+KEY = os.environ.get('AUTH_KEY')
 ISSUER = "ors:compute"
 
 
-def token_required(handler):
+
+def group_level_permission(handler):
+    '''
+    Function Wrapper to determine if user is allowed to perform request.
+    '''
+
+    @wraps(handler)
+    def wrapped_handler(ark,*args,**kwargs):
+
+        if os.environ.get("NO_AUTH",False):
+            return handler(ark,*args, **kwargs)
+
+        if flask.request.headers.get("Authorization") is None:
+            return flask.Response(
+                response= json.dumps({"error": "Request Missing Authorization Header"}),
+                status=403,
+                content_type="application/json"
+            )
+        if flask.request.headers.get("Authorization") is None:
+            encoded_token = flask.request.cookies.get("fairscapeAuth")
+        else:
+            encoded_token = flask.request.headers.get("Authorization")
+        json_token = jwt.decode(encoded_token, KEY, algorithms='HS256',audience = 'https://fairscape.org')
+
+        if json_token.get('role',None) == 'admin':
+            return handler(ark,*args, **kwargs)
+        elif json_token.get('role',None) == 'user' and object_owner(ark,json_token):
+            return handler(ark,*args, **kwargs)
+        elif json_token.get('role',None) == 'user' and in_group(ark,json_token):
+            return handler(ark,*args, **kwargs)
+        else:
+            return flask.Response(
+                    response=json.dumps({"error": "Must be admin or object owner."}),
+                    status=401,
+                    content_type="application/json"
+                    )
+
+def owner_level_permission(handler):
+    '''
+    Function Wrapper to determine if user is allowed to perform request.
+    '''
+
+    @wraps(handler)
+    def wrapped_handler(ark,*args,**kwargs):
+
+        if os.environ.get("NO_AUTH",False):
+            return handler(ark,*args, **kwargs)
+
+        if flask.request.headers.get("Authorization") is None:
+            return flask.Response(
+                response= json.dumps({"error": "Request Missing Authorization Header"}),
+                status=403,
+                content_type="application/json"
+            )
+        if flask.request.headers.get("Authorization") is None:
+            encoded_token = flask.request.cookies.get("fairscapeAuth")
+        else:
+            encoded_token = flask.request.headers.get("Authorization")
+        json_token = jwt.decode(encoded_token, KEY, algorithms='HS256',audience = 'https://fairscape.org')
+
+        if json_token.get('role',None) == 'admin':
+            return handler(ark,*args, **kwargs)
+        elif json_token.get('role',None) == 'user' and object_owner(ark,json_token):
+            return handler(ark,*args, **kwargs)
+        else:
+            return flask.Response(
+                    response=json.dumps({"error": "Must be admin or object owner."}),
+                    status=401,
+                    content_type="application/json"
+                    )
+
+def user_level_permission(handler):
     '''
     Function Wrapper for all endpoints that checks that an Authorization is present in request headers.
     If not the wrapper will return an error.
@@ -18,6 +90,9 @@ def token_required(handler):
 
     @wraps(handler)
     def wrapped_handler(*args, **kwargs):
+        if os.environ.get("NO_AUTH",False):
+            return handler(*args, **kwargs)
+
         if flask.request.headers.get("Authorization") is None:
             return flask.Response(
                 response= json.dumps({"error": "Request Missing Authorization Header"}),
@@ -25,12 +100,15 @@ def token_required(handler):
                 content_type="application/json"
             )
 
-        token_response = requests.post(
-            url = AUTH_SERVICE + "/inspect",
-            headers = {"Authorization": flask.request.headers.get("Authorization")}
-            )
+        if flask.request.headers.get("Authorization") is None:
+            encoded_token = flask.request.cookies.get("fairscapeAuth")
+        else:
+            encoded_token = flask.request.headers.get("Authorization")
+        json_token = jwt.decode(encoded_token, KEY, algorithms='HS256',audience = 'https://fairscape.org')
 
-        if token_response.status_code == 204:
+        if json_token.get('role',None) == 'admin':
+            return handler(*args, **kwargs)
+        if json_token.get('role',None) == 'user':
             return handler(*args, **kwargs)
         else:
             return flask.Response(
@@ -38,111 +116,81 @@ def token_required(handler):
                     status=401,
                     content_type="application/json"
                     )
-
     return wrapped_handler
 
-
-def token_redirect(handler):
+def admin_level_permission(handler):
     '''
-    Function Wrapper for all endpoints that checks for an Authorization token in request headers, if not
-    the wrapper will redirect the user to login.
+    Function Wrapper for all endpoints that checks that an Authorization is present in request headers.
+    If not the wrapper will return an error.
 
-    Used for frontend views where a user must be logged in to use some part of the page.
-    i.e. deleting a identifier from landing page interface
+    Used for API service calls where a Globus Token is required.
     '''
 
     @wraps(handler)
     def wrapped_handler(*args, **kwargs):
-        if flask.request.headers.get("Authorization") is not None:
+        if os.environ.get("NO_AUTH",False):
+            return handler(*args, **kwargs)
+
+        if flask.request.headers.get("Authorization") is None:
+            return flask.Response(
+                response= json.dumps({"error": "Request Missing Authorization Header"}),
+                status=403,
+                content_type="application/json"
+            )
+        if flask.request.headers.get("Authorization") is None:
+            encoded_token = flask.request.cookies.get("fairscapeAuth")
+        else:
+            encoded_token = flask.request.headers.get("Authorization")
+        json_token = jwt.decode(encoded_token, KEY, algorithms='HS256',audience = 'https://fairscape.org')
+
+        if json_token.get('role',None) == 'admin':
             return handler(*args, **kwargs)
         else:
-            return flask.redirect(AUTH_SERVICE + "login")
-
+            return flask.Response(
+                    response=json.dumps({"error": "failed to authorize user"}),
+                    status=401,
+                    content_type="application/json"
+                    )
     return wrapped_handler
 
+def object_owner(ark,json_token):
 
-def check_permission(user_token, resource, action):
-    '''
-    Issues a permissions challenge to the token for the request
-    '''
+    resource = requests.get(AUTH_SERVICE + '/resource/' + ark).json()
 
-    challenge_body = {
-        "principal": user_token,
-        "resource": resource,
-        "action": action,
-        "issuer": ISSUER
-    }
-
-    challenge_response = requests.post(
-        AUTH_SERVICE + "challenge",
-        data=json.dumps(challenge_body)
-    )
-
-    if challenge_response.status_code == 200:
+    if resource['Owner'] == json_token['sub']:
         return True
 
+    return False
+
+def in_group(ark,json_token):
+
+    resource = requests.get(AUTH_SERVICE + '/resource/' + ark).json()
+
+    user_group = json_token.get('group',None)
+    if user_group is None:
+        return False
+    resource_group = resource.get('group',None)
+    if resource_group is None:
+        return False
+
+    if isinstance(user_group,list):
+        if isinstance(resource_group,list):
+            for u_group in user_group:
+                if u_group in resource_group:
+                    return True
+            return False
+        else:
+            if resource_group in user_group:
+                return True
+            return False
     else:
-        return False
+        if isinstance(resource_group,list):
+            if user_group in resource_group:
+                return True
+            return False
+        else:
+            if user_group == resource_group:
+                return True
+            return False
 
-
-def register_resource(user_token, resource):
-    '''
-    Post a record of a created object in the Auth service
-    '''
-
-    resp = requests.post(
-        url = AUTH_SERVICE + "resource",
-        data = json.dumps({
-            "@id": resource,
-            "owner": user_token
-            })
-        )
-
-    if resp.status_code == 200:
-        return True
-
-    else:
-        return False
-
-
-def delete_resource(user_token, resource):
-
-    resp = requests.delete(
-        url = AUTH_SERVICE + "resource/" + resource,
-        headers = {"Authorization": f"Bearer {user_token}"}
-        )
-
-    if resp.statuse_code != 200:
-        return False
-
-    return True
-
-
-def create_policy(user_token, resource, principal, action, allow):
-    '''
-    Used to change set permissions on objects from this service at the centrilized auth service
-    '''
-
-    policy_body = {
-        "resouce": resource,
-        "principal": principal,
-        "action": action,
-        "allow": allow,
-        "issuer": ISSUER
-    }
-
-
-    policy_response = requests.post(
-        url = AUTH_SERVICE + "policy",
-        data=json.dumps(policy_body),
-        headers = {"Authorization": f"Bearer {user_token}"}
-        )
-
-
-    if policy_response.status_code == 200:
-        return True
-
-    # FIXME: handle different errors and return
-
-    else:
-        return False
+    return False
