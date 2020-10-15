@@ -34,8 +34,14 @@ def group_level_permission(handler):
             encoded_token = flask.request.cookies.get("fairscapeAuth")
         else:
             encoded_token = flask.request.headers.get("Authorization")
-        json_token = jwt.decode(encoded_token, KEY, algorithms='HS256',audience = 'https://fairscape.org')
-
+        try:
+            json_token = jwt.decode(encoded_token, KEY, algorithms='HS256',audience = 'https://fairscape.org')
+        except:
+            return flask.Response(
+                response= json.dumps({"error": "Auth Expired."}),
+                status=401,
+                content_type="application/json"
+            )
         if json_token.get('role',None) == 'admin':
             return handler(ark,*args, **kwargs)
         elif json_token.get('role',None) == 'user' and object_owner(ark,json_token):
@@ -82,7 +88,7 @@ def owner_level_permission(handler):
                     status=401,
                     content_type="application/json"
                     )
-
+    return wrap
 def user_level_permission(handler):
     '''
     Function Wrapper for all endpoints that checks that an Authorization is present in request headers.
