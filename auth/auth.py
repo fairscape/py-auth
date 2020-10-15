@@ -166,7 +166,7 @@ def object_owner(ark,json_token):
 
     resource = requests.get(AUTH_SERVICE + '/resource/' + ark.split('/')[-1]).json()
 
-    if resource['Owner'] == json_token['sub']:
+    if resource['owner'] == json_token['sub']:
         return True
 
     return False
