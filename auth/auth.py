@@ -88,7 +88,7 @@ def owner_level_permission(handler):
                     status=401,
                     content_type="application/json"
                     )
-    return wrap
+    return wrapped_handler
 def user_level_permission(handler):
     '''
     Function Wrapper for all endpoints that checks that an Authorization is present in request headers.
