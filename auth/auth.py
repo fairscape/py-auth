@@ -164,7 +164,7 @@ def admin_level_permission(handler):
 
 def object_owner(ark,json_token):
 
-    resource = requests.get(AUTH_SERVICE + '/resource/' + ark).json()
+    resource = requests.get(AUTH_SERVICE + '/resource/' + ark.split('/')[-1]).json()
 
     if resource['Owner'] == json_token['sub']:
         return True
@@ -173,7 +173,7 @@ def object_owner(ark,json_token):
 
 def in_group(ark,json_token):
 
-    resource = requests.get(AUTH_SERVICE + '/resource/' + ark).json()
+    resource = requests.get(AUTH_SERVICE + '/resource/' + ark.split('/')[-1]).json()
 
     user_group = json_token.get('group',None)
     if user_group is None:
