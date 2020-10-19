@@ -54,7 +54,7 @@ def group_level_permission(handler):
                     status=401,
                     content_type="application/json"
                     )
-
+    return wrapped_handler
 def owner_level_permission(handler):
     '''
     Function Wrapper to determine if user is allowed to perform request.
@@ -76,8 +76,14 @@ def owner_level_permission(handler):
             encoded_token = flask.request.cookies.get("fairscapeAuth")
         else:
             encoded_token = flask.request.headers.get("Authorization")
-        json_token = jwt.decode(encoded_token, KEY, algorithms='HS256',audience = 'https://fairscape.org')
-
+        try:
+            json_token = jwt.decode(encoded_token, KEY, algorithms='HS256',audience = 'https://fairscape.org')
+        except:
+            return flask.Response(
+                response= json.dumps({"error": "Auth Expired."}),
+                status=401,
+                content_type="application/json"
+            )
         if json_token.get('role',None) == 'admin':
             return handler(ark,*args, **kwargs)
         elif json_token.get('role',None) == 'user' and object_owner(ark,json_token):
@@ -113,8 +119,14 @@ def user_level_permission(handler):
             encoded_token = flask.request.cookies.get("fairscapeAuth")
         else:
             encoded_token = flask.request.headers.get("Authorization")
-        json_token = jwt.decode(encoded_token, KEY, algorithms='HS256',audience = 'https://fairscape.org')
-
+        try:
+            json_token = jwt.decode(encoded_token, KEY, algorithms='HS256',audience = 'https://fairscape.org')
+        except:
+            return flask.Response(
+                response= json.dumps({"error": "Auth Expired."}),
+                status=401,
+                content_type="application/json"
+            )
         if json_token.get('role',None) == 'admin':
             return handler(*args, **kwargs)
         if json_token.get('role',None) == 'user':
@@ -150,8 +162,14 @@ def admin_level_permission(handler):
             encoded_token = flask.request.cookies.get("fairscapeAuth")
         else:
             encoded_token = flask.request.headers.get("Authorization")
-        json_token = jwt.decode(encoded_token, KEY, algorithms='HS256',audience = 'https://fairscape.org')
-
+        try:
+            json_token = jwt.decode(encoded_token, KEY, algorithms='HS256',audience = 'https://fairscape.org')
+        except:
+            return flask.Response(
+                response= json.dumps({"error": "Auth Expired."}),
+                status=401,
+                content_type="application/json"
+            )
         if json_token.get('role',None) == 'admin':
             return handler(*args, **kwargs)
         else:
@@ -175,7 +193,7 @@ def in_group(ark,json_token):
 
     resource = requests.get(AUTH_SERVICE + '/resource/' + ark.split('/')[-1]).json()
 
-    user_group = json_token.get('group',None)
+    user_group = json_token.get('groups',None)
     if user_group is None:
         return False
     resource_group = resource.get('group',None)
