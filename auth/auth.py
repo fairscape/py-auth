@@ -139,6 +139,49 @@ def user_level_permission(handler):
                     )
     return wrapped_handler
 
+def group_get_owner_else(handler):
+    '''
+    Function Wrapper to determine if user is allowed to perform request.
+    '''
+
+    @wraps(handler)
+    def wrapped_handler(ark,*args,**kwargs):
+
+        if os.environ.get("NO_AUTH",False):
+            return handler(ark,*args, **kwargs)
+
+        if flask.request.headers.get("Authorization") is None:
+            return flask.Response(
+                response= json.dumps({"error": "Request Missing Authorization Header"}),
+                status=403,
+                content_type="application/json"
+            )
+        if flask.request.headers.get("Authorization") is None:
+            encoded_token = flask.request.cookies.get("fairscapeAuth")
+        else:
+            encoded_token = flask.request.headers.get("Authorization")
+        try:
+            json_token = jwt.decode(encoded_token, KEY, algorithms='HS256',audience = 'https://fairscape.org')
+        except:
+            return flask.Response(
+                response= json.dumps({"error": "Auth Expired."}),
+                status=401,
+                content_type="application/json"
+            )
+        if json_token.get('role',None) == 'admin':
+            return handler(ark,*args, **kwargs)
+        elif json_token.get('role',None) == 'user' and object_owner(ark,json_token):
+            return handler(ark,*args, **kwargs)
+        elif flask.request.method == 'GET' and in_group(ark,json_token):
+            return handler(ark,*args, **kwargs)
+        else:
+            return flask.Response(
+                    response=json.dumps({"error": "Must be admin or object owner."}),
+                    status=401,
+                    content_type="application/json"
+                    )
+    return wrapped_handler
+
 def admin_level_permission(handler):
     '''
     Function Wrapper for all endpoints that checks that an Authorization is present in request headers.
