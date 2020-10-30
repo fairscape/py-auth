@@ -2,10 +2,10 @@ import unittest, sys, requests, json,io
 import warnings
 
 warnings.simplefilter("ignore", ResourceWarning)
-USER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJodHRwczovL2ZhaXJzY2FwZS5vcmciLCJleHAiOjE2MDM5OTI2MjQsImdyb3VwcyI6bnVsbCwiaWF0IjoxNjAzODE5ODI0LCJuYW1lIjoiSnVzdGluIFVTZXIiLCJyb2xlIjoidXNlciIsInN1YiI6ImQ4ZTJkOTY1LTcxZGMtNGVlMC1hZTIzLWVhNzA4NTA4Y2FjNiJ9.Cob7Vl-6MNEICRn2W0KtMdvdOpF4gPO9BqX6wa7V5QI"
-ADMIN_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJodHRwczovL2ZhaXJzY2FwZS5vcmciLCJleHAiOjE2MDM5OTI1OTUsImdyb3VwcyI6bnVsbCwiaWF0IjoxNjAzODE5Nzk1LCJuYW1lIjoiSnVzdGluIEFkbWluIiwicm9sZSI6ImFkbWluIiwic3ViIjoiMzUyNmQxMjgtODVhNi00MTRlLWFlZDMtNWNjMDI5MDk4MjUxIn0.JiESbrhnMT52vYobl0dGa5i25FnDQcGOLbD-3y6LLM4"
+USER_TOKEN =
+ADMIN_TOKEN = 
 BASE_URL = 'https://clarklab.uvarc.io/'
-ARK = 'ark:99999/68c18c54-0ded-43c2-8bf5-9ad843ff1c18'
+ARK = 'ark:99999/23ca2cf4-8521-424d-99be-9072ea29aaa6'
 GROUP = 'test-group'
 
 class test_user(unittest.TestCase):
@@ -73,7 +73,7 @@ class test_user(unittest.TestCase):
                         "author":'Michael Notter'
                         }
         files = {
-            'files':open('auth-tests.py','rb'),
+            'files':open('README.md','rb'),
             'metadata':json.dumps(dataset_meta)
         }
 
@@ -140,8 +140,8 @@ class test_admin(unittest.TestCase):
 
     def test_admin_mds_get(self):
 
-        ark = 'ark:99999/02296050-26f8-441b-a765-b708224ca40a'
-        r = requests.get(BASE_URL + 'mds/' + ark,
+
+        r = requests.get(BASE_URL + 'mds/' + ARK,
                             headers = {"Authorization": ADMIN_TOKEN})
 
         status_code = r.status_code
@@ -201,7 +201,7 @@ class test_admin(unittest.TestCase):
                         "author":'Michael Notter'
                         }
         files = {
-            'files':open('auth-tests.py','rb'),
+            'files':open('README.md','rb'),
             'metadata':json.dumps(dataset_meta)
         }
 
@@ -221,7 +221,7 @@ class test_admin(unittest.TestCase):
                         "author":'Michael Notter'
                         }
         files = {
-            'files':open('auth-tests.py','rb'),
+            'files':open('README.md','rb'),
             'metadata':json.dumps(dataset_meta)
         }
 
@@ -241,7 +241,7 @@ class test_admin(unittest.TestCase):
                         "author":'Michael Notter'
                         }
         files = {
-            'files':open('auth-tests.py','rb'),
+            'files':open('README.md','rb'),
             'metadata':json.dumps(dataset_meta)
         }
 
@@ -329,7 +329,7 @@ class test_owner(unittest.TestCase):
                         "description":"TEst"
                         }
         files = {
-            'files':open('auth-tests.py','rb'),
+            'files':open('README.md','rb'),
             'metadata':json.dumps(dataset_meta)
         }
 
@@ -352,7 +352,7 @@ class test_owner(unittest.TestCase):
                         "author":'Michael Notter'
                         }
         files = {
-            'files':open('auth-tests.py','rb'),
+            'files':open('README.md','rb'),
             'metadata':json.dumps(dataset_meta)
         }
 
@@ -372,7 +372,7 @@ class test_owner(unittest.TestCase):
                         "author":'Michael Notter'
                         }
         files = {
-            'files':open('auth-tests.py','rb'),
+            'files':open('README.md','rb'),
             'metadata':json.dumps(dataset_meta)
         }
 
@@ -401,7 +401,7 @@ class test_owner(unittest.TestCase):
                         "author":'Michael Notter'
                         }
         files = {
-            'files':open('auth-tests.py','rb'),
+            'files':open('README.md','rb'),
             'metadata':json.dumps(dataset_meta)
         }
 
@@ -431,7 +431,7 @@ class test_owner(unittest.TestCase):
                         "author":'Michael Notter'
                         }
         files = {
-            'files':open('auth-tests.py','rb'),
+            'files':open('README.md','rb'),
             'metadata':json.dumps(dataset_meta)
         }
 
@@ -510,7 +510,7 @@ class test_group(unittest.TestCase):
                         'group':GROUP
                         }
         files = {
-            'files':open('auth-tests.py','rb'),
+            'files':open('README.md','rb'),
             'metadata':json.dumps(dataset_meta)
         }
 
@@ -532,7 +532,7 @@ class test_group(unittest.TestCase):
                         "description":"TEst"
                         }
         files = {
-            'files':open('auth-tests.py','rb'),
+            'files':open('README.md','rb'),
             'metadata':json.dumps(dataset_meta)
         }
 
@@ -552,7 +552,7 @@ class test_group(unittest.TestCase):
                         'group':GROUP
                         }
         files = {
-            'files':open('auth-tests.py','rb'),
+            'files':open('README.md','rb'),
             'metadata':json.dumps(dataset_meta)
         }
 
@@ -581,7 +581,7 @@ class test_group(unittest.TestCase):
                         'group':GROUP
                         }
         files = {
-            'files':open('auth-tests.py','rb'),
+            'files':open('README.md','rb'),
             'metadata':json.dumps(dataset_meta)
         }
 
@@ -611,7 +611,7 @@ class test_group(unittest.TestCase):
                         'group':GROUP
                         }
         files = {
-            'files':open('auth-tests.py','rb'),
+            'files':open('README.md','rb'),
             'metadata':json.dumps(dataset_meta)
         }
 
