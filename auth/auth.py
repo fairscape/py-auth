@@ -119,14 +119,14 @@ def user_level_permission(handler):
             encoded_token = flask.request.cookies.get("fairscapeAuth")
         else:
             encoded_token = flask.request.headers.get("Authorization")
-        try:
-            json_token = jwt.decode(encoded_token, KEY, algorithms='HS256',audience = 'https://fairscape.org')
-        except:
-            return flask.Response(
-                response= json.dumps({"error": "Auth Expired."}),
-                status=401,
-                content_type="application/json"
-            )
+
+        json_token = jwt.decode(encoded_token, KEY, algorithms='HS256',audience = 'https://fairscape.org')
+        # except:
+        #     return flask.Response(
+        #         response= json.dumps({"error": "Auth Expired."}),
+        #         status=401,
+        #         content_type="application/json"
+        #     )
         if json_token.get('role',None) == 'admin':
             return handler(*args, **kwargs)
         if json_token.get('role',None) == 'user':
