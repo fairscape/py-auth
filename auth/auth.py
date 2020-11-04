@@ -24,7 +24,7 @@ def group_level_permission(handler):
         if os.environ.get("NO_AUTH",False):
             return handler(ark,*args, **kwargs)
 
-        if flask.request.headers.get("Authorization") is None:
+        if flask.request.headers.get("Authorization") is None and flask.request.cookies.get("fairscapeAuth") is None:
             return flask.Response(
                 response= json.dumps({"error": "Request Missing Authorization Header"}),
                 status=403,
@@ -66,7 +66,7 @@ def owner_level_permission(handler):
         if os.environ.get("NO_AUTH",False):
             return handler(ark,*args, **kwargs)
 
-        if flask.request.headers.get("Authorization") is None:
+        if flask.request.headers.get("Authorization") is None and flask.request.cookies.get("fairscapeAuth") is None:
             return flask.Response(
                 response= json.dumps({"error": "Request Missing Authorization Header"}),
                 status=403,
@@ -108,7 +108,7 @@ def user_level_permission(handler):
         if os.environ.get("NO_AUTH",False):
             return handler(*args, **kwargs)
 
-        if flask.request.headers.get("Authorization") is None:
+        if flask.request.headers.get("Authorization") is None and flask.request.cookies.get("fairscapeAuth") is None:
             return flask.Response(
                 response= json.dumps({"error": "Request Missing Authorization Header"}),
                 status=403,
@@ -150,7 +150,7 @@ def group_get_owner_else(handler):
         if os.environ.get("NO_AUTH",False):
             return handler(ark,*args, **kwargs)
 
-        if flask.request.headers.get("Authorization") is None:
+        if flask.request.headers.get("Authorization") is None and flask.request.cookies.get("fairscapeAuth") is None:
             return flask.Response(
                 response= json.dumps({"error": "Request Missing Authorization Header"}),
                 status=403,
@@ -195,7 +195,7 @@ def admin_level_permission(handler):
         if os.environ.get("NO_AUTH",False):
             return handler(*args, **kwargs)
 
-        if flask.request.headers.get("Authorization") is None:
+        if flask.request.headers.get("Authorization") is None and flask.request.cookies.get("fairscapeAuth") is None:
             return flask.Response(
                 response= json.dumps({"error": "Request Missing Authorization Header"}),
                 status=403,
@@ -241,7 +241,7 @@ def in_group(ark,json_token):
         resource = requests.get(AUTH_SERVICE + '/resource/' + ark).json()
     except:
         return False
-        
+
     user_group = json_token.get('groups',None)
     if user_group is None:
         return False
