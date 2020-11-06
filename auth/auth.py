@@ -245,7 +245,7 @@ def in_group(ark,json_token):
     user_group = json_token.get('groups',None)
     if user_group is None:
         return False
-    resource_group = resource.get('group',None)
+    resource_group = resource.get('groups',None)
     if resource_group is None:
         return False
 
